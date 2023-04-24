@@ -11,3 +11,19 @@ def plot_img_and_mask(img, mask):
         ax[i + 1].imshow(mask == i)
     plt.xticks([]), plt.yticks([])
     plt.show()
+
+
+def find_majority(k):
+    myMap = {}
+    maximum = ('', 0)  # (occurring element, occurrences)
+    for n in k:
+        if n in myMap:
+            myMap[n] += 1
+        else:
+            myMap[n] = 1
+
+        # Keep track of maximum on the go
+        if myMap[n] > maximum[1]:
+            maximum = (n, myMap[n])
+
+    return maximum

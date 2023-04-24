@@ -52,16 +52,17 @@ class LandDetect:
         self.model = load_pretrained(model, path_to_pretrained_model)
         self.model.eval()
 
-    def reference(self, img, output_size: tuple):
+    # , mask_lr=False, mask_l=False, mask_r=False, mask_t=False):
+    def reference(self, img, output_size: tuple, mask_lr=False, mask_l=False, mask_r=False, mask_t=False):
         with torch.no_grad():
-            # Delete background
+            # Mask background
             img = img[125:, :, :]
 
             img = cv2.resize(img, (160, 80), interpolation=cv2.INTER_AREA)
 
             sv_img = np.zeros_like(img).astype(np.uint8)
             img = input_transform(img)
-            img = img.transpose((2, 0, 1)).copy()
+            img = img.transpose((2, 0, 1))
             img = torch.from_numpy(img).unsqueeze(0)  # .cuda()
             pred = self.model(img)
             pred = F.interpolate(pred, size=img.size()
@@ -71,6 +72,16 @@ class LandDetect:
             for i, color in enumerate(color_map):
                 for j in range(3):
                     sv_img[:, :, j][pred == i] = color_map[i][j]
+            # if mask_lr:
+            #     sv_img[:, 75:, :] = [0, 0, 0]
+            #     sv_img[:, :50, :] = [0, 0, 0]
+            #     print('mask_lr')
+            if mask_l:
+                sv_img[:, 60:, :] = [0, 0, 0]
+                print('Masked Left')
+            if mask_r:
+                sv_img[:, :90, :] = [0, 0, 0]
+                print('Masked Right')
 
-        #return cv2.resize(sv_img, output_size, interpolation=cv2.INTER_NEAREST)
+        # return cv2.resize(sv_img, output_size, interpolation=cv2.INTER_NEAREST)
         return sv_img

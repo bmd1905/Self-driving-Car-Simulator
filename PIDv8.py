@@ -11,8 +11,10 @@ import torch
 from ultralytics import YOLO
 
 from tools.custom import LandDetect
-from controller import Calc_error, PID, calc_speed
+# from controller import Calc_error, PID, calc_speed, calc_error_with_right_lane
+from controller import Controller
 from opt import Options
+# from utils.utils import find_majority
 
 root = Path(__file__).parent.absolute()
 
@@ -23,10 +25,12 @@ sendBack_Speed = 0
 current_speed = 0
 current_angle = 0
 
+
 def Control(angle, speed):
     global sendBack_angle, sendBack_Speed
     sendBack_angle = angle
     sendBack_Speed = speed
+
 
 # Target output size
 output_size = (640, 380)
@@ -40,16 +44,14 @@ PORT = 54321
 # Connect to the server on local computer
 s.connect(('127.0.0.1', PORT))
 
-# Class names
-class_names = ['no', 'turn_right', 'straight', 'no_turn_left', 'no_turn_right', 'no_straight', 'car', 'unknown', 'turn_left']
-
-
 if __name__ == "__main__":
     # Config
     opt = Options()
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     half = device.type != 'cpu'
+
+    # Controller
+    controller = Controller()
 
     # Load YOLOv8
     yolo = YOLO(opt.weights_yolo)
@@ -58,7 +60,7 @@ if __name__ == "__main__":
     # net = cv2.dnn.readNet('pretrain/yolov8-best.onnx')
     # # Set the preferred backend and target for running inference
     # net.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
-    # net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)    
+    # net.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
 
     # Load PIDNet
     land_detector = LandDetect('pidnet-s', os.path.join(opt.weights_lane))
@@ -66,6 +68,16 @@ if __name__ == "__main__":
     try:
         cnt_fps = 0
         t_pre = 0
+
+        # Mask segmented image
+        mask_lr = False
+        mask_l = False
+        mask_r = False
+        mask_t = False
+
+        # Check for reset frame
+        majority_class_check = ""
+
         while True:
             """
             - Chương trình đưa cho bạn 1 giá trị đầu vào:
@@ -85,19 +97,19 @@ if __name__ == "__main__":
             try:
                 message_getState = bytes("0", "utf-8")
                 s.sendall(message_getState)
-                s.settimeout(1) # set a timeout of 1 second
+                s.settimeout(0.1)  # set a timeout of 1 second
                 state_date = s.recv(100)
-            
+
                 current_speed, current_angle = state_date.decode(
                     "utf-8"
-                    ).split(' ')
+                ).split(' ')
             except Exception as er:
                 print(er)
                 pass
 
             message = bytes(f"1 {sendBack_angle} {sendBack_Speed}", "utf-8")
             s.sendall(message)
-            s.settimeout(1) # set a timeout of 1 second
+            s.settimeout(0.2)  # set a timeout of 1 second
             data = s.recv(100000)
 
             try:
@@ -105,61 +117,69 @@ if __name__ == "__main__":
                     np.frombuffer(
                         data,
                         np.uint8
-                        ), -1
-                    )
+                    ), -1
+                )
                 image_ = image.copy()
                 # ============================================================ PIDNet
-                rs_image = land_detector.reference(image, output_size)
+                segmented_image = land_detector.reference(
+                    image, output_size, mask_lr, mask_l, mask_r, mask_t)
 
                 # ============================================================ YOLO
                 # Resize the image to the desired dimensions
                 image = cv2.resize(image, (640, 384))
-                
+
                 with torch.no_grad():
                     yolo_output = yolo(image)[0]
 
-                # ONNX
-                # Create a 4D blob from the input image
-                # blob = cv2.dnn.blobFromImage(image, 1/255.0, (640, 640))
-                # # print(blob.shape[2:4]) # (384, 640)
-
-                # # Set the input to the network
-                # net.setInput(blob)
-                
-                # # Run forward pass to compute output of the network
-                # preds = net.forward()
-                # # print(yolo_output.shape)
-                # # sys.exit()
-
-                # preds = non_max_suppression(preds, conf_thres=opt.conf_thres,
-                #                              iou_thres=opt.iou_thres,
-                #                              nc=len(class_names))
-                
-                # results = []
-                # for i, pred in enumerate(preds):
-                #     orig_img = image[i] if isinstance(image, list) else image
-                #     if not isinstance(image, torch.Tensor):
-                #         pred[:, :4] = ops.scale_boxes(img.shape[2:], pred[:, :4], orig_img.shape)
-                #     path, _, _, _, _ = self.batch
-                #     img_path = path[i] if isinstance(path, list) else path
-                #     results.append(Results(orig_img=orig_img, path=img_path, names=self.model.names, boxes=pred))
-
-                # return results
                 # ============================================================ Controller
-                error = Calc_error(rs_image)
-                angle = PID(error, p=0.48, i=0.02, d=0.18)
-                speed = calc_speed(angle)
+                angle, speed, next_step, mask_l, mask_r = controller.control(segmented_image=segmented_image,
+                                                                             yolo_output=yolo_output)
 
-                Control(-angle, speed)
+                # Control when turing
+                if next_step:
+                    print("Next step")
+                    print("Angle:", angle)
+                    print("Speed:", speed)
+                    Control(-angle, speed)
+
+                # Default control
+                else:
+                    error = controller.calc_error(segmented_image)
+                    angle = controller.PID(error, p=0.20, i=0.0, d=0.08)
+                    speed = controller.calc_speed(angle)
+
+                    print("Error:", error)
+                    print("Angle:", angle)
+                    print("Speed:", speed)
+
+                    # print("Not Next Step:", -angle, speed)
+
+                    Control(-angle, speed)
+
                 # ============================================================ Show image
-                # rs_image = cv2.resize(rs_image, (336,200), interpolation=cv2.INTER_NEAREST) # Just for visualize
-                yolo_output = yolo_output.plot()
+                # Just for visualize
+                # segmented_image = cv2.resize(
+                #     segmented_image, (336, 200), interpolation=cv2.INTER_NEAREST)
+                # yolo_output = yolo_output.plot()
 
-                cv2.imshow("IMG_goc", yolo_output)
-                cv2.imshow("IMG", rs_image)
-                cv2.waitKey(1)
-                # ============================================================ Calculate FPS
-                if cnt_fps >= 30:
+                # cv2.imshow("IMG_goc", yolo_output)
+                # cv2.imshow("IMG", segmented_image)
+                # cv2.waitKey(1)
+                # # ============================================================ Calculate FPS
+                if cnt_fps >= 90:
+                    # Check reset frame
+                    # if majority_class_check == majority_class:
+                    #     # Set back values
+                    #     majority_class = ""
+                    #     start_cal_area = False
+                    #     stored_class_names = []
+                    #     majority_class_check = ""
+
+                    #     mask_lr = False
+                    #     mask_l = False
+                    #     mask_r = False
+                    #     mask_t = False
+
                     t_cur = time.time()
                     fps = (cnt_fps + 1)/(t_cur - t_pre)
                     t_pre = t_cur
