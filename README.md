@@ -1,6 +1,6 @@
 # Self-driving Car Simulator
 
-This project is a self-driving car simulator built in the Unity environment. It uses YOLOv8 Nano for traffic light detection and PIDNet for lane segmentation on the street. The car is controlled using a PID controller based on the traffic light and segmented image. 
+This project is a final project of the [AIO-2022 cource](https://www.facebook.com/aivietnam.edu.vn) about self-driving car simulator built in the Unity environment. It uses YOLOv8 Nano for traffic light detection and PIDNet for lane segmentation. The car is controlled using a PID controller rule-based on the traffic light and segmented image.
 
 ## Introduction
 
