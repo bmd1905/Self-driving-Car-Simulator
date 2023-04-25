@@ -76,12 +76,12 @@ class LandDetect:
             #     sv_img[:, 75:, :] = [0, 0, 0]
             #     sv_img[:, :50, :] = [0, 0, 0]
             #     print('mask_lr')
-            if mask_l:
-                sv_img[:, 60:, :] = [0, 0, 0]
-                print('Masked Left')
             if mask_r:
-                sv_img[:, :90, :] = [0, 0, 0]
+                sv_img[:, 90:, :] = [0, 0, 0]
                 print('Masked Right')
+            if mask_l:
+                sv_img[:, :60, :] = [0, 0, 0]
+                print('Masked Left')
 
         # return cv2.resize(sv_img, output_size, interpolation=cv2.INTER_NEAREST)
         return sv_img

@@ -162,7 +162,7 @@ if __name__ == "__main__":
                 #     segmented_image, (336, 200), interpolation=cv2.INTER_NEAREST)
                 # yolo_output = yolo_output.plot()
 
-                # cv2.imshow("IMG_goc", yolo_output)
+                # # cv2.imshow("IMG_goc", yolo_output)
                 # cv2.imshow("IMG", segmented_image)
                 # cv2.waitKey(1)
                 # # ============================================================ Calculate FPS
