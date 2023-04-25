@@ -7,7 +7,7 @@ This project is a final project of the [AIO-2022 cource](https://www.facebook.co
 ### Detection model
 YOLOv8 Nano is one of the models in the YOLOv8 family of object detection models from Ultralytics. It is the fastest and smallest model in the family, while still providing state-of-the-art performance. YOLOv8 builds on the success of previous versions of YOLO, introducing new features and improvements for enhanced performance, flexibility, and efficiency. It supports a full range of vision AI tasks, including detection, segmentation, pose estimation, tracking, and classification12.
 
-### Segmentation modle
+### Segmentation model
 PIDNet is a real-time semantic segmentation network inspired by PID controllers. It is a novel three-branch network architecture that contains three branches to parse detailed, context and boundary information respectively. The additional boundary branch is introduced to mimic the PID controller architecture and remedy the overshoot issue of previous models. PIDNet achieves the best trade-off between inference speed and accuracy and surpasses all existing models with similar inference speed on the Cityscapes and CamVid datasets34.
 
 ### Controller
