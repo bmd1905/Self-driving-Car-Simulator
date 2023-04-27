@@ -13,6 +13,18 @@ PIDNet is a real-time semantic segmentation network inspired by PID controllers.
 ### Controller
 A PID controller (Proportional Integral Derivative controller) is a control loop mechanism that is widely used in industrial control systems and other applications requiring continuously modulated control. It continuously calculates an error value as the difference between a desired setpoint and a measured process variable, and applies a correction based on proportional, integral, and derivative terms (denoted P, I, and D respectively). The controller attempts to minimize the error over time by adjustment of a control variable to a new value determined by a weighted sum of the control terms1.
 
+## Usage
+Step 1: Download weights and place them in the ```pretrain``` directory
+
+Step 2: Start Unity
+
+Step 3: Run the model:
+
+```
+python PIDv8.py
+```
+
+
 ## Demo
 
 [![Watch the video](https://i.imgur.com/vKb2F1B.png)](https://youtu.be/-5h1aEelFdw)
