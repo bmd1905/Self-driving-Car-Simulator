@@ -27,7 +27,7 @@ python PIDv8.py
 
 ## Demo
 
-[![Watch the video](https://youtu.be/_FNIAnlkLQg)
+Video demo [here](https://www.youtube.com/watch?v=_FNIAnlkLQg).
 
 ## Contributing
 
