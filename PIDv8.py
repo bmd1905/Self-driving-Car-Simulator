@@ -78,6 +78,8 @@ if __name__ == "__main__":
         # Check for reset frame
         majority_class_check = ""
 
+        reset_counter = 0
+
         while True:
             """
             - Chương trình đưa cho bạn 1 giá trị đầu vào:
@@ -142,17 +144,28 @@ if __name__ == "__main__":
                     print("Speed:", speed)
                     Control(-angle, speed)
 
+                    reset_counter = 1
+
                 # Default control
                 else:
                     error = controller.calc_error(segmented_image)
-                    angle = controller.PID(error, p=0.20, i=0.0, d=0.08)
-                    speed = controller.calc_speed(angle)
+                    angle = controller.PID(error, p=0.2, i=0.0, d=0.02)
+
+                    if reset_counter >= 1 and reset_counter < 35:
+                        speed = 300
+                        reset_counter += 1
+                    elif reset_counter == 35:
+                        reset_counter = 0
+                        speed = 300
+                    else:
+                        speed = controller.calc_speed(angle)
+
+                        if float(current_speed) > 44.5:
+                            speed = 15
 
                     print("Error:", error)
                     print("Angle:", angle)
                     print("Speed:", speed)
-
-                    # print("Not Next Step:", -angle, speed)
 
                     Control(-angle, speed)
 
@@ -162,24 +175,11 @@ if __name__ == "__main__":
                 #     segmented_image, (336, 200), interpolation=cv2.INTER_NEAREST)
                 # yolo_output = yolo_output.plot()
 
-                # # cv2.imshow("IMG_goc", yolo_output)
+                # cv2.imshow("IMG_goc", yolo_output)
                 # cv2.imshow("IMG", segmented_image)
-                # cv2.waitKey(1)
+                # cv2.waitKey(5)
                 # # ============================================================ Calculate FPS
                 if cnt_fps >= 90:
-                    # Check reset frame
-                    # if majority_class_check == majority_class:
-                    #     # Set back values
-                    #     majority_class = ""
-                    #     start_cal_area = False
-                    #     stored_class_names = []
-                    #     majority_class_check = ""
-
-                    #     mask_lr = False
-                    #     mask_l = False
-                    #     mask_r = False
-                    #     mask_t = False
-
                     t_cur = time.time()
                     fps = (cnt_fps + 1)/(t_cur - t_pre)
                     t_pre = t_cur
@@ -187,6 +187,8 @@ if __name__ == "__main__":
                     cnt_fps = 0
 
                 cnt_fps += 1
+
+                # time.sleep(0.001)
             except Exception as er:
                 print(er)
                 pass

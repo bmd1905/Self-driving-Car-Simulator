@@ -42,6 +42,18 @@ class Controller():
 
         self.reset_counter = 0
 
+        self.is_turn_left = False
+        self.is_turn_right = False
+        self.is_straight = False
+
+        self.is_no_turn_right_case_1 = False
+        self.is_no_turn_right_case_2 = False
+        self.is_no_turn_right_case_3 = False
+        self.is_no_turn_right_case_4 = False
+
+        self.is_turn_left_case_1 = False
+        self.is_turn_left_case_2 = False
+
     def reset(self):
         # Reset
         self.turning_counter = 0
@@ -66,6 +78,18 @@ class Controller():
 
         self.reset_counter = 0
 
+        self.is_turn_left = False
+        self.is_turn_right = False
+        self.is_straight = False
+
+        self.is_no_turn_right_case_1 = False
+        self.is_no_turn_right_case_2 = False
+        self.is_no_turn_right_case_3 = False
+        self.is_no_turn_right_case_4 = False
+
+        self.is_turn_left_case_1 = False
+        self.is_turn_left_case_2 = False
+
     def control(self, segmented_image, yolo_output):
 
         # Reset in 90 frames
@@ -79,11 +103,14 @@ class Controller():
                 print("Reset"*200)
 
         # Calculate area of left, right, and top corner of the segmented image
-        self.sum_left_corner = np.sum(segmented_image[:25, :25, 0])
+        # self.sum_left_corner = np.sum(segmented_image[:25, :25, 0])
         self.sum_right_corner = np.sum(
             segmented_image[:25, -25:, 0])
-        self.sum_top_corner = np.sum(
-            segmented_image[:25, 67:92, 0])
+        # self.sum_top_corner = np.sum(
+            # segmented_image[:25, 67:92, 0])
+        
+        self.sum_left_corner = np.sum(segmented_image[:12, :12, 0])
+        self.sum_top_corner = np.sum(segmented_image[:12, 67:92, 0])
 
         print("Is calculate areas:", self.start_cal_area)
         print("Is turning:", self.is_turning)
@@ -147,69 +174,115 @@ class Controller():
         angle = 0
 
         # Check turning counter
-        if self.turning_counter < 30:  # self.turning_counter >= 1 and
+        MAX_COUNTER = 40
+        if self.turning_counter < MAX_COUNTER:  # self.turning_counter >= 1 and
             print('Turning Counter:', self.turning_counter)
 
             match self.majority_class:
                 case 'turn_left':
-                    speed = 30
-                    if self.turning_counter <= 12:
-                        angle = 2
-                    elif self.turning_counter >= 13 and self.turning_counter <= 24:
-                        angle = self.angle_turning
-                    elif self.turning_counter == 26:
-                        self.turning_counter = 30
-                    elif self.turning_counter >= 25:
-                        angle = 0
+                    if self.is_turn_left_case_1:
+                        speed = -1
+                        if self.turning_counter <= 18: # Hard
+                            angle = 1
+                        elif self.turning_counter > 18 and self.turning_counter <= 31:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                    elif self.is_turn_left_case_2:
+                        speed = -2
+                        if self.turning_counter <= 17:
+                            angle = -1
+                        elif self.turning_counter > 17 and self.turning_counter <= 35:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
 
                 case 'turn_right':
-                    speed = 1
+                    speed = -5
                     if self.turning_counter <= 8:
                         angle = 2
-                    elif self.turning_counter == 20:
-                        self.turning_counter = 30
-                    elif self.turning_counter > 8 and self.turning_counter < 15:
+                    elif self.turning_counter > 8 and self.turning_counter < 26:
                         angle = self.angle_turning
-                    elif self.turning_counter >= 15 and self.turning_counter <= 24:
-                        angle = 0
+                    # elif self.turning_counter >= 28 and self.turning_counter < 38:
+                    #     speed = 200
+                    #     angle = -2
+                    else:
+                        self.turning_counter = MAX_COUNTER
 
                 case 'no_turn_left':
-                    # speed = 40
-                    if self.turning_counter <= 10:
-                        angle = 2
-                    elif self.turning_counter == 27:
-                        self.turning_counter = 30
-                    elif self.turning_counter > 10:
-                        angle = -90
-
-                case 'no_turn_right':
-                    speed = 30
+                    speed = -3
                     if self.turning_counter <= 9:
-                        angle = 1
-                    elif self.turning_counter > 9 and self.turning_counter <= 19:
-                        angle = self.angle_turning
-                    elif self.turning_counter == 20:
-                        self.turning_counter = 30
+                        angle = 2
+                    elif self.turning_counter > 9 and self.turning_counter <= 28:
+                        angle = -33
+                    else:
+                        self.turning_counter = MAX_COUNTER
+                        
+                case 'no_turn_right':
+                    if self.is_no_turn_right_case_1:    # Left hard
+                        speed = -2
+                        if self.turning_counter <= 17:
+                            angle = 5
+                        elif self.turning_counter > 17 and self.turning_counter <= 27:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                    elif self.is_no_turn_right_case_2:  # Left
+                        speed = -2
+                        if self.turning_counter <= 13:
+                            angle = -1
+                        elif self.turning_counter > 13 and self.turning_counter <= 30:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                    elif self.is_no_turn_right_case_3: # Straight (left of map)
+                        print("is_no_turn_right_case_3") 
+                        speed = -2
+                        if self.turning_counter <= 8:
+                            angle = 0
+                        elif self.turning_counter > 8 and self.turning_counter <= 15:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                    else:   # Straight: self.is_no_turn_right_case_4
+                        speed = -1
+                        if self.turning_counter <= 13:
+                            angle = 0
+                        # elif self.turning_counter > 8 and self.turning_counter <= 15:
+                        #     angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
 
                 case 'straight':
-                    if self.turning_counter <= 17:
+                    speed = -1
+                    if self.turning_counter <= 25:
                         angle = self.angle_turning
                     else:
-                        self.turning_counter = 30
+                        self.turning_counter = MAX_COUNTER
 
                 case 'no_straight':
-                    speed = 10
-                    if self.turning_counter <= 9:
-                        angle = 2
-                    elif self.turning_counter == 25:
-                        self.turning_counter = 30
-                    else:
-                        angle = self.angle_turning
+                    if self.is_turn_left: # Left
+                        speed = -2
+                        if self.turning_counter <= 17:
+                            angle = 0
+                        elif self.turning_counter > 17 and self.turning_counter <= 35:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                    else: # Right
+                        speed = -4
+                        if self.turning_counter <= 9:
+                            angle = 0
+                        elif self.turning_counter > 9 and self.turning_counter <= 25:
+                            angle = self.angle_turning
+                        else:
+                            self.turning_counter = MAX_COUNTER
+                            
 
             if speed == 0:
                 speed = 70
-            if angle == 0:
-                angle = self.angle_turning
+            # if angle == 0:
+            #     angle = self.angle_turning
 
             # Set send back values
             self.sendBack_angle = angle
@@ -219,7 +292,7 @@ class Controller():
 
             self.next_step = True
 
-        elif self.turning_counter >= 30:
+        elif self.turning_counter >= MAX_COUNTER:
             print("Reset"*1000)
 
             # Reset
@@ -227,20 +300,31 @@ class Controller():
 
     def handle_areas(self, areas, segmented_image):
         print("Handle Areas:", areas)
-        # print("Sum of top corner:", self.sum_top_corner)
-        # print("Sum of top left corner:", self.sum_left_corner)
+
+        # ============ Test
+        # self.sum_left_corner = np.sum(segmented_image[:12, :12, 0])
+        # self.sum_top_corner = np.sum(segmented_image[:12, 67:92, 0])
+        # ============
+
+        print("self.sum_left_corner", self.sum_left_corner)
+        print("self.sum_top_corner", self.sum_top_corner)
+        print("self.sum_right_corner", self.sum_right_corner)
 
         if areas > 600.0 and self.majority_class == 'turn_right':
             # Set angle and error turning
-            self.angle_turning = -15
+            self.angle_turning = -45
 
             # Start turning and stop cal areas
             self.is_turning = True
             self.start_cal_area = False
 
         if areas > 550.0 and self.majority_class == 'turn_left':
-            # Set angle and error turning
-            self.angle_turning = 13
+            if self.sum_top_corner  > 17_000:
+                self.is_turn_left_case_1 = True
+            else:
+                self.is_turn_left_case_2 = True
+
+            self.angle_turning = 26
 
             # Start turning and stop cal areas
             self.is_turning = True
@@ -248,7 +332,7 @@ class Controller():
 
         if areas >= 500.0 and self.majority_class == 'no_turn_left':
             if self.sum_right_corner > self.sum_top_corner/2:  # Turn right3
-                angle = -90
+                angle = -30
             else:
                 angle = 1e-5  # Straight
 
@@ -259,24 +343,31 @@ class Controller():
             # Set global angle
             self.angle_turning = angle
 
-        # ============ Test
-        if self.majority_class == 'no_turn_right':
-            self.mask_r = True
-
-        self.sum_left_corner = np.sum(segmented_image[:12, :12, 0])
-        self.sum_top_corner = np.sum(segmented_image[:12, 67:92, 0])
-        # ============
-        print("self.sum_left_corner", self.sum_left_corner)
-        print("self.sum_top_corner", self.sum_top_corner)
-
         if areas >= 500.0 and self.majority_class == 'no_turn_right':
-            if (self.sum_left_corner > 2_000 and self.sum_top_corner < 17_500) \
-                    or (self.sum_left_corner < 9_000 and self.sum_top_corner < 9_000):
+            if (self.sum_left_corner > 2_000 and self.sum_top_corner < 17_500):# \
+                #    or (self.sum_left_corner < 9_000 and self.sum_top_corner < 9_000):
+                
+                if self.sum_top_corner < 3_000: # Hard
+                    self.is_no_turn_right_case_1 = True
+                else:
+                    self.is_no_turn_right_case_2 = True
+
                 angle = 30  # Left
-            else:
+            
+            elif self.sum_top_corner > 18_000:
+                self.is_no_turn_right_case_3 = True
+
                 angle = 0  # Straight
                 self.mask_l = True
                 self.mask_r = True
+
+            else:
+                self.is_no_turn_right_case_4 = True
+
+                angle = 0  # Straight
+                self.mask_l = True
+                self.mask_r = True
+
 
             # Start turning and stop cal areas
             self.is_turning = True
@@ -299,10 +390,12 @@ class Controller():
         if areas > 500.0 and self.majority_class == 'no_straight':
             if self.sum_left_corner > self.sum_right_corner*4:
                 # Turn left
-                angle = 10
+                angle = 22
+                self.is_turn_left = True
             else:
                 # Turn right
-                angle = -17
+                angle = -24
+                self.is_turn_right = True
 
             # Start turning and stop cal areas
             self.is_turning = True
@@ -350,7 +443,7 @@ class Controller():
         if len(arr) > 0:
             center_right_lane = int((min(arr) + max(arr)*2.5)/3.5)
             error = int(image.shape[1]/2) - center_right_lane
-            return error
+            return error*1.3
         else:
             return 0
 
@@ -371,9 +464,9 @@ class Controller():
 
     def calc_speed(self, angle):
         if abs(angle) < 10:
-            speed = 65
+            speed = 70
         elif 10 <= abs(angle) <= 20:
-            speed = 30
+            speed = 1
         else:
-            speed = 30
+            speed = 1
         return speed
