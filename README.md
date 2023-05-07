@@ -41,6 +41,10 @@ PIDNet is a real-time semantic segmentation network inspired by PID controllers.
 ### Controller
 A PID controller (Proportional Integral Derivative controller) is a control loop mechanism that is widely used in industrial control systems and other applications requiring continuously modulated control. It continuously calculates an error value as the difference between a desired setpoint and a measured process variable, and applies a correction based on proportional, integral, and derivative terms (denoted P, I, and D respectively). The controller attempts to minimize the error over time by adjustment of a control variable to a new value determined by a weighted sum of the control terms1.
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/90423581/236684583-6f31d6ff-80eb-44c4-99ee-0df2c42a4f10.png" width="500" height="350" />
+</p>
+
 
 #### Pseudocode for Control
 
