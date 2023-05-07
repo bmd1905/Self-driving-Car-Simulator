@@ -1,6 +1,6 @@
 # Self-driving Car Simulator
 
-This project is a final project of the [AIO-2022 cource](https://www.facebook.com/aivietnam.edu.vn) about self-driving car simulator built in the Unity environment. It uses YOLOv8 Nano for traffic light detection and PIDNet for lane segmentation. The car is controlled using a PID controller rule-based on the traffic light and segmented image.
+This project is a final project of the [AIO-2022 cource](https://www.facebook.com/aivietnam.edu.vn) about self-driving car simulator built in the Unity environment. It uses YOLOv8 Nano for traffic light detection and PIDNet for lane segmentation. The car is controlled using a PID controller rule-based on the traffic sign and segmented image.
 
 ## Introduction
 ### Pipeline
@@ -22,7 +22,12 @@ We compared difference models on number of parameters, mAP@.5, and mAP@.5:.95, t
 
 </div>
 
-Based on our results, YOLOv8 Nano has been adopted for this project.
+Based on our results, YOLOv8 Nano has been adopted for this project. 
+
+This is some predicted images, YOLOv8 Nano was successful on predicting small objects, which helps significant in the control task
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/90423581/236683285-79e0f75c-a199-4b30-98de-2ca0a1ef8be2.png" width="700" height="500" />
+</p>
 
 ### Segmentation model
 PIDNet is a real-time semantic segmentation network inspired by PID controllers. It is a novel three-branch network architecture that contains three branches to parse detailed, context and boundary information respectively. The additional boundary branch is introduced to mimic the PID controller architecture and remedy the overshoot issue of previous models. PIDNet achieves the best trade-off between inference speed and accuracy and surpasses all existing models with similar inference speed on the Cityscapes and CamVid datasets34.
