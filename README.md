@@ -3,6 +3,10 @@
 This project is a final project of the [AIO-2022 cource](https://www.facebook.com/aivietnam.edu.vn) about self-driving car simulator built in the Unity environment. It uses YOLOv8 Nano for traffic light detection and PIDNet for lane segmentation. The car is controlled using a PID controller rule-based on the traffic light and segmented image.
 
 ## Introduction
+### Pipeline
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/90423581/236652354-843e9a41-3289-435c-be5a-fee681d38f2f.png" data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="700" height="500" />
+</p>
 
 ### Detection model
 YOLOv8 Nano is one of the models in the YOLOv8 family of object detection models from Ultralytics. It is the fastest and smallest model in the family, while still providing state-of-the-art performance. YOLOv8 builds on the success of previous versions of YOLO, introducing new features and improvements for enhanced performance, flexibility, and efficiency. It supports a full range of vision AI tasks, including detection, segmentation, pose estimation, tracking, and classification12.
