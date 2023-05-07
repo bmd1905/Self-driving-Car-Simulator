@@ -31,7 +31,7 @@ python PIDv8.py
 
 ## Demo
 
-Video demo [here](https://www.youtube.com/watch?v=_FNIAnlkLQg).
+Video demo [here](https://youtu.be/gZ3nPZWp-eE).
 
 ## Contributing
 
