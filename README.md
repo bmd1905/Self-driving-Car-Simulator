@@ -8,8 +8,21 @@ This project is a final project of the [AIO-2022 cource](https://www.facebook.co
   <img src="https://user-images.githubusercontent.com/90423581/236652354-843e9a41-3289-435c-be5a-fee681d38f2f.png" data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="600" height="400" />
 </p>
 
-### Detection model
-YOLOv8 Nano is one of the models in the YOLOv8 family of object detection models from Ultralytics. It is the fastest and smallest model in the family, while still providing state-of-the-art performance. YOLOv8 builds on the success of previous versions of YOLO, introducing new features and improvements for enhanced performance, flexibility, and efficiency. It supports a full range of vision AI tasks, including detection, segmentation, pose estimation, tracking, and classification12.
+### Detection task
+We compared difference models on number of parameters, mAP@.5, and mAP@.5:.95, this is our result:
+
+<div align="center">
+
+| Model | Params (M) | mAP@.5 | mAP@.5:.95 |
+|---|---|---|---|
+| YOLOv5m | 21.2 | 0.993 | 0.861 |
+| YOLOv6n | 4.7 | **0.996** | 0.856 |
+| YOLOv7 | 6 | 0.991 | 0.835 |
+| YOLOv8n | **3.2** | 0.992 | **0.887** |
+
+</div>
+
+Based on our results, YOLOv8 Nano has been adopted for this project.
 
 ### Segmentation model
 PIDNet is a real-time semantic segmentation network inspired by PID controllers. It is a novel three-branch network architecture that contains three branches to parse detailed, context and boundary information respectively. The additional boundary branch is introduced to mimic the PID controller architecture and remedy the overshoot issue of previous models. PIDNet achieves the best trade-off between inference speed and accuracy and surpasses all existing models with similar inference speed on the Cityscapes and CamVid datasets34.
