@@ -24,7 +24,7 @@ We compared difference models on number of parameters, mAP@.5, and mAP@.5:.95, t
 
 Based on our results, YOLOv8 Nano has been adopted for this project. 
 
-This is some predicted images, YOLOv8 Nano was successful on predicting small objects, which helps significant in the control task
+These are some example images that were predicted using YOLOv8 Nano. The model was successful in predicting small objects, which is significant for the control task.
 <p align="center">
   <img src="https://user-images.githubusercontent.com/90423581/236683285-79e0f75c-a199-4b30-98de-2ca0a1ef8be2.png" width="700" height="500" />
 </p>
@@ -32,22 +32,67 @@ This is some predicted images, YOLOv8 Nano was successful on predicting small ob
 ### Segmentation model
 PIDNet is a real-time semantic segmentation network inspired by PID controllers. It is a novel three-branch network architecture that contains three branches to parse detailed, context and boundary information respectively. The additional boundary branch is introduced to mimic the PID controller architecture and remedy the overshoot issue of previous models. PIDNet achieves the best trade-off between inference speed and accuracy and surpasses all existing models with similar inference speed on the Cityscapes and CamVid datasets34.
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/90423581/236684096-ce02c2b3-5b9c-48da-a712-9d0d0e6bb5e5.png" width="700" height="300" />
+</p>
+
+
+
 ### Controller
 A PID controller (Proportional Integral Derivative controller) is a control loop mechanism that is widely used in industrial control systems and other applications requiring continuously modulated control. It continuously calculates an error value as the difference between a desired setpoint and a measured process variable, and applies a correction based on proportional, integral, and derivative terms (denoted P, I, and D respectively). The controller attempts to minimize the error over time by adjustment of a control variable to a new value determined by a weighted sum of the control terms1.
+
+
+#### Pseudocode for Control
+
+```
+Find A and B
+C = (A+B)/2     (midpoint)
+error ≡ IC = HI-HC
+angle = PID(error,  p,  i,  d)
+speed = f(angle)
+
+
+*OH: hyper-parameter (e.g., ⅓ or ¼ of image height)
+```
+
+#### Pseudocode for Handle Traffic Sign
+```
+# Pre-turning
+for each detected_class in yolo_outputs:
+	if detected_class in traffic_signs:
+		majority_classes.add(detected_class)
+
+		if len(majority_classes) = 10:
+			majority_class = find_majority(majority_classes)
+			turning = True
+```
+
+```
+# Turning
+while turning_counter <= max_turning_counter:
+	switch case for majority_class:
+		angle = constant
+		speed = constant
+		
+		turning_counter += 1
+```
 
 ## Usage
 Step 1: Download weights and place them in the ```pretrain``` directory
 
 Step 2: Start Unity
 
-Step 3: Run the model:
+Step 3: Run the script:
 
 ```
-python PIDv8.py
+python main.py
 ```
 
 
 ## Demo
+
+<video src="https://www.youtube.com/watch?v=gZ3nPZWp-eE&ab_channel=BuiMinhDuc" controls="controls" style="max-width: 730px;">
+</video>
 
 Video demo [here](https://youtu.be/gZ3nPZWp-eE).
 
