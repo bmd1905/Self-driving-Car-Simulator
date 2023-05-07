@@ -5,7 +5,7 @@ This project is a final project of the [AIO-2022 cource](https://www.facebook.co
 ## Introduction
 ### Pipeline
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/90423581/236652354-843e9a41-3289-435c-be5a-fee681d38f2f.png" data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="700" height="500" />
+  <img src="https://user-images.githubusercontent.com/90423581/236652354-843e9a41-3289-435c-be5a-fee681d38f2f.png" data-canonical-src="https://gyazo.com/eb5c5741b6a9a16c692170a41a49c858.png" width="600" height="400" />
 </p>
 
 ### Detection model
