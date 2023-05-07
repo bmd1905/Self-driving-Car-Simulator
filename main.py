@@ -11,9 +11,8 @@ from ultralytics import YOLO
 
 from tools.custom import LandDetect
 from tools.controller import Controller
-from utils.opt import ModelConfig, ControlConfig
-from utils.socket import create_socket, send_state, recv_state
-
+from utils.config import ModelConfig, ControlConfig
+from utils.socket import create_socket
 
 # Target output size
 output_size = (640, 380)
@@ -47,24 +46,23 @@ def main(s, config, controller, yolo, land_detector):
             """
                 
             try:
-                # message_getState = bytes("0", "utf-8")
-                # s.sendall(message_getState)
-                # s.settimeout(0.1)  # Set a timeout of 0.1 second
-                # state_date = s.recv(100)
+                message_getState = bytes("0", "utf-8")
+                s.sendall(message_getState)
+                s.settimeout(0.1)  # Set timeout
+                state_date = s.recv(100)
 
-                # config.current_speed, config.current_angle = state_date.decode(
-                #     "utf-8"
-                # ).split(' ')
-                # message = bytes(f"1 {config.sendBack_angle} {config.sendBack_Speed}", "utf-8")
-                # s.sendall(message)
-                config.current_speed, config.current_angle = send_state(s, config)
-                # s.settimeout(0.2)  # Set a timeout of 0.2 second
-                # data = s.recv(100000)
-                data = recv_state(s)
+                config.current_speed, config.current_angle = state_date.decode(
+                    "utf-8"
+                ).split(' ')
             except Exception as er:
+                print(er)
                 pass
 
-            
+            message = bytes(f"1 {config.sendBack_angle} {config.sendBack_Speed}", "utf-8")
+            s.sendall(message)
+            s.settimeout(0.5)  # Set timeout
+            data = s.recv(100000)
+
 
             try:
                 image = cv2.imdecode(
@@ -73,7 +71,7 @@ def main(s, config, controller, yolo, land_detector):
                         np.uint8
                     ), -1
                 )
-                image_ = image.copy()
+
                 # ============================================================ PIDNet
                 segmented_image = land_detector.reference(
                     image, output_size, mask_lr, mask_l, mask_r, mask_t)
