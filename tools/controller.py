@@ -6,56 +6,58 @@ from utils.utils import find_majority
 
 class Controller():
     def __init__(self):
-        self.error_arr = np.zeros(5)
-        self.error_sp = np.zeros(5)
+        # Initialize variables for PID control and traffic signs detection
+        self.error_arr = np.zeros(5)       # Array to store the error values for PID control
+        self.error_sp = np.zeros(5)        # Array to store the speed error values for PID control
 
-        self.pre_t = time.time()
-        self.pre_t_spd = time.time()
+        self.pre_t = time.time()           # Store the current time for steering control
+        self.pre_t_spd = time.time()       # Store the current time for speed control
 
-        self.sendBack_angle = 0
-        self.sendBack_speed = 0
+        self.sendBack_angle = 0            # Initialize the steering angle to 0
+        self.sendBack_speed = 0            # Initialize the speed to 0
 
-        self.traffic_lights = ['turn_right', 'turn_left',
-                               'straight', 'no_turn_left', 'no_turn_right', 'no_straight']
+        # List of all the possible traffic light labels
+        self.traffic_lights = ['turn_right', 'turn_left', 'straight', 'no_turn_left', 'no_turn_right', 'no_straight']
+        
+        # List of all the possible object detection labels
+        self.class_names = ['no', 'turn_right', 'straight', 'no_turn_left', 'no_turn_right', 'no_straight', 'car', 'unknown', 'turn_left']
+        
 
-        self.class_names = ['no', 'turn_right', 'straight', 'no_turn_left',
-                            'no_turn_right', 'no_straight', 'car', 'unknown', 'turn_left']
+        self.stored_class_names = []       # List to store the detected labels for finding majority class
 
-        self.stored_class_names = []  # Stored class for finding majority class
+        self.majority_class = ""           # Initialize the majority class to empty
+        self.start_cal_area = False        # Flag to start calculating the area for turning
+        self.turning_counter = 0           # Counter to track the number of turning frames
+        self.angle_turning = 0             # Angle to turn the car
 
-        self.majority_class = ""
-        self.start_cal_area = False
-        self.turning_counter = 0
-        self.angle_turning = 0
+        self.sum_left_corner = 0           # Sum of the pixel values in the left corner of the image
+        self.sum_right_corner = 0          # Sum of the pixel values in the right corner of the image
+        self.sum_top_corner = 0            # Sum of the pixel values in the top corner of the image
 
-        self.sum_left_corner = 0
-        self.sum_right_corner = 0
-        self.sum_top_corner = 0
+        self.mask_l = False                # Flag to indicate mask left image
+        self.mask_r = False                # Flag to indicate mask right image
+        self.mask_lr = False               # Flag to indicate mask leftn and right image
+        self.mask_t = False                # Flag to indicate mask top image
 
-        self.mask_l = False
-        self.mask_r = False
-        self.mask_lr = False
-        self.mask_t = False
+        self.next_step = False             # Flag to indicate the next step of the car when turning
+        self.is_turning = False            # Flag to indicate if the car is currently turning
 
-        self.next_step = False
-        self.is_turning = False
+        self.reset_counter = 0             # Counter to track the number of frames since the last reset
 
-        self.reset_counter = 0
+        self.is_turn_left = False          # Flag to indicate if the car is turning left
+        self.is_turn_right = False         # Flag to indicate if the car is turning right
+        self.is_straight = False           # Flag to indicate if the car is going straight
 
-        self.is_turn_left = False
-        self.is_turn_right = False
-        self.is_straight = False
+        self.is_no_turn_right_case_1 = False    # Flag to indicate if there is a "no turn right" sign in case 1
+        self.is_no_turn_right_case_2 = False    # Flag for case 2
+        self.is_no_turn_right_case_3 = False    # Flag for case 3
+        self.is_no_turn_right_case_4 = False    # Flag for case 4
 
-        self.is_no_turn_right_case_1 = False
-        self.is_no_turn_right_case_2 = False
-        self.is_no_turn_right_case_3 = False
-        self.is_no_turn_right_case_4 = False
-
-        self.is_turn_left_case_1 = False
-        self.is_turn_left_case_2 = False
+        self.is_turn_left_case_1 = False        # Flag to indicate if there is a "turn left" sign in case 1
+        self.is_turn_left_case_2 = False        # Flag for case 2
 
     def reset(self):
-        # Reset
+        # Reset all values to default values
         self.turning_counter = 0
         self.majority_class = ""
         self.start_cal_area = False
@@ -65,8 +67,6 @@ class Controller():
         self.mask_l = False
         self.mask_r = False
         self.mask_t = False
-
-        self.stored_class_names = []  # Stored class for finding majority class
 
         self.majority_class = ""
         self.start_cal_area = False
@@ -91,10 +91,6 @@ class Controller():
         self.is_turn_left_case_2 = False
 
     def control(self, segmented_image, yolo_output):
-
-        # Reset in 90 frames
-        # and (not self.start_cal_area or not self.is_turning):
-        # and not self.start_cal_area and not self.is_turning:
         if self.majority_class == "turn_left":
             # Increase counter for controlling
             self.reset_counter += 1
@@ -103,12 +99,8 @@ class Controller():
                 print("Reset"*200)
 
         # Calculate area of left, right, and top corner of the segmented image
-        # self.sum_left_corner = np.sum(segmented_image[:25, :25, 0])
         self.sum_right_corner = np.sum(
             segmented_image[:25, -25:, 0])
-        # self.sum_top_corner = np.sum(
-            # segmented_image[:25, 67:92, 0])
-        
         self.sum_left_corner = np.sum(segmented_image[:12, :12, 0])
         self.sum_top_corner = np.sum(segmented_image[:12, 67:92, 0])
 
@@ -135,32 +127,20 @@ class Controller():
                     self.stored_class_names.remove('turn_left')
                     self.stored_class_names.remove('turn_right')
 
-                # if self.class_names[class_id] == 'no_straight':
-                #     self.stored_class_names.extend(['no_straight']*2)
-
                 if self.class_names[class_id] == 'turn_right':
                     self.stored_class_names.extend(['turn_right']*2)
-                    # self.stored_class_names.remove('turn_left')
-                    # self.stored_class_names.remove('straight')
 
                 if self.class_names[class_id] == 'turn_left':
                     self.stored_class_names.extend(['turn_left'])
 
-                # if self.class_names[class_id] == 'no_turn_left':
-                #     self.stored_class_names.extend(['no_turn_left']*3)
-
                 if self.class_names[class_id] == 'no_turn_right':
                     self.stored_class_names.extend(['no_turn_right'])
-                    # self.stored_class_names.remove('straight')
 
         # Starting to find majority class
         elif len(self.stored_class_names) >= 9:  # 9 is a hyperparameter
             # Get the majority class
             self.majority_class = find_majority(
                 self.stored_class_names)[0]  # Returned in set type
-
-            # Assign for checking
-            # majority_class_check = majority_class
 
             # Start calculate areas
             self.start_cal_area = True
@@ -175,7 +155,7 @@ class Controller():
 
         # Check turning counter
         MAX_COUNTER = 40
-        if self.turning_counter < MAX_COUNTER:  # self.turning_counter >= 1 and
+        if self.turning_counter < MAX_COUNTER:
             print('Turning Counter:', self.turning_counter)
 
             match self.majority_class:
@@ -203,9 +183,6 @@ class Controller():
                         angle = 2
                     elif self.turning_counter > 8 and self.turning_counter < 26:
                         angle = self.angle_turning
-                    # elif self.turning_counter >= 28 and self.turning_counter < 38:
-                    #     speed = 200
-                    #     angle = -2
                     else:
                         self.turning_counter = MAX_COUNTER
 
@@ -236,7 +213,6 @@ class Controller():
                         else:
                             self.turning_counter = MAX_COUNTER
                     elif self.is_no_turn_right_case_3: # Straight (left of map)
-                        print("is_no_turn_right_case_3") 
                         speed = -2
                         if self.turning_counter <= 8:
                             angle = 0
@@ -278,24 +254,22 @@ class Controller():
                         else:
                             self.turning_counter = MAX_COUNTER
                             
-
+            # Set default speed
             if speed == 0:
                 speed = 70
-            # if angle == 0:
-            #     angle = self.angle_turning
 
             # Set send back values
             self.sendBack_angle = angle
             self.sendBack_speed = speed
 
+            # Increase the counter by 1
             self.turning_counter += 1
 
+            # Send back to not use PID calculate again when turning
             self.next_step = True
 
         elif self.turning_counter >= MAX_COUNTER:
-            print("Reset"*1000)
-
-            # Reset
+            # Reset after turning
             self.reset()
 
     def handle_areas(self, areas, segmented_image):
@@ -433,6 +407,16 @@ class Controller():
             pass
 
     def calc_error(self, image):
+        """
+        Calculates the error between the center of the right lane and the center of the image.
+
+        Args:
+        image: A NumPy array representing the image.
+
+        Returns:
+        The error between the center of the right lane and the center of the image.
+        """
+
         arr = []
         height = 12
         lineRow = image[height, :]
@@ -448,6 +432,18 @@ class Controller():
             return 0
 
     def PID(self, error, p, i, d):
+        """
+        Calculates the PID output for the specified error.
+
+        Args:
+        error: The error value.
+        p: The proportional gain.
+        i: The integral gain.
+        d: The derivative gain.
+
+        Returns:
+        The PID output.
+        """
         self.error_arr[1:] = self.error_arr[0:-1]
         self.error_arr[0] = error
         P = error*p
@@ -463,6 +459,15 @@ class Controller():
         return int(angle)
 
     def calc_speed(self, angle):
+        """
+        Calculates the speed of the car based on the steering angle.
+
+        Args:
+        angle: The steering angle.
+
+        Returns:
+        The speed of the car.
+        """
         if abs(angle) < 10:
             speed = 70
         elif 10 <= abs(angle) <= 20:

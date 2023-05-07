@@ -52,7 +52,6 @@ class LandDetect:
         self.model = load_pretrained(model, path_to_pretrained_model)
         self.model.eval()
 
-    # , mask_lr=False, mask_l=False, mask_r=False, mask_t=False):
     def reference(self, img, output_size: tuple, mask_lr=False, mask_l=False, mask_r=False, mask_t=False):
         with torch.no_grad():
             # Mask background
@@ -72,16 +71,15 @@ class LandDetect:
             for i, color in enumerate(color_map):
                 for j in range(3):
                     sv_img[:, :, j][pred == i] = color_map[i][j]
-            # if mask_lr:
-            #     sv_img[:, 75:, :] = [0, 0, 0]
-            #     sv_img[:, :50, :] = [0, 0, 0]
-            #     print('mask_lr')
+
+            # Mask image after segmentation step
+            if mask_lr:
+                sv_img[:, 90:, :] = [0, 0, 0]
+                sv_img[:, :60, :] = [0, 0, 0]
             if mask_r:
                 sv_img[:, 90:, :] = [0, 0, 0]
-                print('Masked Right')
             if mask_l:
                 sv_img[:, :60, :] = [0, 0, 0]
-                print('Masked Left')
 
         # return cv2.resize(sv_img, output_size, interpolation=cv2.INTER_NEAREST)
         return sv_img

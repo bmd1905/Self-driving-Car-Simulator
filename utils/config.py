@@ -9,6 +9,12 @@ class ModelConfig:
         self.classes = None
         self.agnostic_nms = False
 
+        self.input_size_yolo = (640, 384)
+        self.segmented_output_size = (640, 380)
+
+        self.view_seg = True
+        self.view_first_view = True
+
 
 class ControlConfig:
     def __init__(self):

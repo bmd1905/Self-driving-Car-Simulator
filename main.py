@@ -1,10 +1,7 @@
 import cv2
 import numpy as np
-from numpy import random
 import time
-from pathlib import Path
 import os
-import sys
 import torch
 
 from ultralytics import YOLO
@@ -14,11 +11,8 @@ from tools.controller import Controller
 from utils.config import ModelConfig, ControlConfig
 from utils.socket import create_socket
 
-# Target output size
-output_size = (640, 380)
 
-
-def main(s, config, controller, yolo, land_detector):
+def main(s, config, config_model, controller, yolo, land_detector):
     try:
         cnt_fps = 0
         t_pre = 0
@@ -46,25 +40,35 @@ def main(s, config, controller, yolo, land_detector):
             """
                 
             try:
+                # Send signal to the server.
                 message_getState = bytes("0", "utf-8")
                 s.sendall(message_getState)
-                s.settimeout(0.1)  # Set timeout
+
+                # Set a timeout of 0.1 seconds.
+                s.settimeout(0.1)
+
+                # Receive 100 bytes of data from the server.
                 state_date = s.recv(100)
 
-                config.current_speed, config.current_angle = state_date.decode(
-                    "utf-8"
-                ).split(' ')
+                # Decode the received data from UTF-8.
+                config.current_speed, config.current_angle = state_date.decode("utf-8").split(" ")
+
             except Exception as er:
-                print(er)
                 pass
 
+            # Send sendBack_angle and sendBack_Speed to the server.
             message = bytes(f"1 {config.sendBack_angle} {config.sendBack_Speed}", "utf-8")
             s.sendall(message)
-            s.settimeout(0.5)  # Set timeout
+
+            # Set a timeout of 0.5 seconds.
+            s.settimeout(0.5)
+
+            # Receive 100000 bytes of data from the server.
             data = s.recv(100000)
 
 
             try:
+                # Decode image in byte type recieved from server
                 image = cv2.imdecode(
                     np.frombuffer(
                         data,
@@ -74,11 +78,11 @@ def main(s, config, controller, yolo, land_detector):
 
                 # ============================================================ PIDNet
                 segmented_image = land_detector.reference(
-                    image, output_size, mask_lr, mask_l, mask_r, mask_t)
+                    image, config_model.segmented_output_size, mask_lr, mask_l, mask_r, mask_t)
 
                 # ============================================================ YOLO
                 # Resize the image to the desired dimensions
-                image = cv2.resize(image, (640, 384))
+                imaeg = cv2.resize(image, (640, 384))
 
                 with torch.no_grad():
                     yolo_output = yolo(image)[0]
@@ -121,14 +125,20 @@ def main(s, config, controller, yolo, land_detector):
                     config.update(-angle, speed)
 
                 # ============================================================ Show image
-                # Just for visualize
+                # Resize image if it's too small for you to see
                 # segmented_image = cv2.resize(
                 #     segmented_image, (336, 200), interpolation=cv2.INTER_NEAREST)
-                # yolo_output = yolo_output.plot()
 
-                # cv2.imshow("IMG_goc", yolo_output)
-                # cv2.imshow("IMG", segmented_image)
-                # cv2.waitKey(5)
+                
+                yolo_output = yolo_output.plot()
+
+                if config_model.view_seg:
+                    cv2.imshow("segmented image", segmented_image)
+
+                if config_model.view_first_view:
+                    cv2.imshow("first view image", yolo_output)
+                
+                cv2.waitKey(1)
                 # ============================================================ Calculate FPS
                 if cnt_fps >= 90:
                     t_cur = time.time()
@@ -140,7 +150,6 @@ def main(s, config, controller, yolo, land_detector):
                 cnt_fps += 1
 
             except Exception as er:
-                print(er)
                 pass
 
     finally:
@@ -174,6 +183,6 @@ if __name__ == "__main__":
     # Load PIDNet
     land_detector = LandDetect('pidnet-s', os.path.join(config_model.weights_lane))
 
-    main(s, config_control, controller, yolo, land_detector)
+    main(s, config_control, config_model, controller, yolo, land_detector)
 
     
