@@ -29,7 +29,7 @@ These are some example images that were predicted using YOLOv8 Nano. The model w
   <img src="https://user-images.githubusercontent.com/90423581/236683285-79e0f75c-a199-4b30-98de-2ca0a1ef8be2.png" width="700" height="500" />
 </p>
 
-### Segmentation model
+### Segmentation task
 PIDNet is a real-time semantic segmentation network inspired by PID controllers. It is a novel three-branch network architecture that contains three branches to parse detailed, context and boundary information respectively. The additional boundary branch is introduced to mimic the PID controller architecture and remedy the overshoot issue of previous models. PIDNet achieves the best trade-off between inference speed and accuracy and surpasses all existing models with similar inference speed on the Cityscapes and CamVid datasets34.
 
 <p align="center">
